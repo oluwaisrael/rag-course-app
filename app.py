@@ -50,12 +50,40 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # 2. Sidebar Setup
+# 2. Sidebar Setup
 st.sidebar.title("📚 Course Navigation")
+
+# Dynamic Drag & Drop File Uploader for Web Users
+uploaded_files = st.sidebar.file_uploader(
+    "Upload Course PDFs", 
+    type=["pdf"], 
+    accept_multiple_files=True
+)
+
+# If a user uploads files through the browser, save them to the workspace
+if uploaded_files:
+    web_uploads_dir = os.path.join("data", "WEB_UPLOADS")
+    os.makedirs(web_uploads_dir, exist_ok=True)
+    
+    new_file_added = False
+    for uploaded_file in uploaded_files:
+        file_path = os.path.join(web_uploads_dir, uploaded_file.name)
+        if not os.path.exists(file_path):
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            new_file_added = True
+            
+    # If new files were added, clear out the cached index and reload the RAG engine
+    if new_file_added:
+        st.cache_resource.clear()
+        st.rerun()
+
+# Build the dropdown course navigation checklist
 if chunks_dataset:
     available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
     selected_course = st.sidebar.selectbox("Select Course Context:", available_courses)
 else:
-    st.sidebar.error("No course data found inside /data directory.")
+    st.sidebar.warning("No courses loaded yet. Drop a PDF above to get started!")
     selected_course = None
 
 if st.sidebar.button("🗑️ Clear Chat History"):
