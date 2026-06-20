@@ -49,7 +49,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-st.sidebar.title("📚 Course Navigation")
+st.sidebar.title(" These are Your Courses man!")
 
 uploaded_files = st.sidebar.file_uploader(
     "Upload Course PDFs", 
@@ -77,17 +77,17 @@ if uploaded_files:
 
 if chunks_dataset:
     available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
-    selected_course = st.sidebar.selectbox("Select Course Context:", available_courses)
+    selected_course = st.sidebar.selectbox("It's from where?:", available_courses)
 else:
     st.sidebar.warning("No courses loaded yet. Drop a PDF above to get started!")
     selected_course = None
 
-if st.sidebar.button("🗑️ Clear Chat History"):
+if st.sidebar.button("DUMP YOUR EX!"):
     st.session_state.messages = []
     st.rerun()
 
-st.title("🎯 Smart Course Repository Chatbot")
-st.caption("Ask questions grounded directly in your verified university lecture slides and notes.")
+st.title("Derin made an ai assistant for you!(maybe himself)")
+st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!")
 
 # Quick Check for API Key
 if not os.environ.get("GEMINI_API_KEY"):
@@ -100,7 +100,7 @@ else:
             st.markdown(message["content"])
 
  
-    if query := st.chat_input("Ask your course question here..."):
+    if query := st.chat_input("Oya what's today's question, dumbasssss"):
         
         with st.chat_message("user"):
             st.markdown(query)
