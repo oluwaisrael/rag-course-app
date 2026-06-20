@@ -45,6 +45,8 @@ def load_reranker():
 chunks_dataset, embedding_model, faiss_index, bm25_index = initialize_rag_engine()
 reranker = load_reranker()
 
+if chunks_dataset and len(chunks_dataset) >= 1000:
+    st.sidebar.warning("⚠️ High-density documents detected. Data truncated to 1,000 chunks for RAM performance safety.")
 # Initialize Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = []
