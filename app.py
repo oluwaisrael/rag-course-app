@@ -43,7 +43,7 @@ chunks_dataset, embedding_model, faiss_index, bm25_index = initialize_rag_engine
 reranker = load_reranker()
 
 if chunks_dataset and len(chunks_dataset) >= 1000:
-    st.sidebar.warning("⚠️ High-density documents detected. Data truncated to 1,000 chunks for RAM performance safety.")
+    st.sidebar.warning("Haba nau, it's too much... derin didnt pay for this!")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -52,14 +52,14 @@ if "messages" not in st.session_state:
 st.sidebar.title(" These are Your Courses man!")
 
 uploaded_files = st.sidebar.file_uploader(
-    "Upload Course PDFs", 
+    "Upload PDFs", 
     type=["pdf"], 
     accept_multiple_files=True
 )
 
 
 if uploaded_files:
-    web_uploads_dir = os.path.join("data", "WEB_UPLOADS")
+    web_uploads_dir = os.path.join("data", "Not Derin's media!")
     os.makedirs(web_uploads_dir, exist_ok=True)
     
     new_file_added = False
@@ -77,17 +77,17 @@ if uploaded_files:
 
 if chunks_dataset:
     available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
-    selected_course = st.sidebar.selectbox("It's from where?:", available_courses)
+    selected_course = st.sidebar.selectbox("from here?:", available_courses)
 else:
     st.sidebar.warning("No courses loaded yet. Drop a PDF above to get started!")
     selected_course = None
 
-if st.sidebar.button("DUMP YOUR EX!"):
+if st.sidebar.button("DUMP YOUR EX! in the binnnn!"):
     st.session_state.messages = []
     st.rerun()
 
-st.title("Derin made an ai assistant for you!(maybe himself)")
-st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!")
+st.title("🤷🏾‍♂️Derin made an ai assistant for you!(maybe for himself)🤷🏾‍♂️")
+st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!😭")
 
 # Quick Check for API Key
 if not os.environ.get("GEMINI_API_KEY"):
