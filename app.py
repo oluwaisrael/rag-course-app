@@ -8,14 +8,13 @@ from google import genai
 from rank_bm25 import BM25Okapi
 from extract import extract_and_chunk_all
 
-# 1. Page Configuration
-st.set_page_config(page_title="UniRAG Academic Assistant", page_icon="📚", layout="wide")
 
-# Helper function to tokenize clean alpha-numeric terms for BM25 matching
+st.set_page_config(page_title="Derin's Academic Assistant", page_icon="📚", layout="wide")
+
 def tokenize_text(text):
     return re.findall(r'\b\w+\b', text.lower())
 
-# Cache data loading & embedding generation so it only happens ONCE when the app starts
+
 @st.cache_resource
 def initialize_rag_engine():
     chunks_dataset = extract_and_chunk_all()
@@ -24,14 +23,13 @@ def initialize_rag_engine():
         
     texts = [item["text"] for item in chunks_dataset]
     
-    # Setup Dense Index (FAISS)
+
     model = SentenceTransformer("all-MiniLM-L6-v2")
     embeddings = model.encode(texts, convert_to_numpy=True)
     dimension = embeddings.shape[1] 
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
-    
-    # Setup Sparse Index (BM25) with proper clean tokenization
+
     tokenized_corpus = [tokenize_text(text) for text in texts]
     bm25_index = BM25Okapi(tokenized_corpus)
     
@@ -41,28 +39,25 @@ def initialize_rag_engine():
 def load_reranker():
     return CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-# Run Hybrid Indexing
 chunks_dataset, embedding_model, faiss_index, bm25_index = initialize_rag_engine()
 reranker = load_reranker()
 
 if chunks_dataset and len(chunks_dataset) >= 1000:
     st.sidebar.warning("⚠️ High-density documents detected. Data truncated to 1,000 chunks for RAM performance safety.")
-# Initialize Chat History
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 2. Sidebar Setup
-# 2. Sidebar Setup
+
 st.sidebar.title("📚 Course Navigation")
 
-# Dynamic Drag & Drop File Uploader for Web Users
 uploaded_files = st.sidebar.file_uploader(
     "Upload Course PDFs", 
     type=["pdf"], 
     accept_multiple_files=True
 )
 
-# If a user uploads files through the browser, save them to the workspace
+
 if uploaded_files:
     web_uploads_dir = os.path.join("data", "WEB_UPLOADS")
     os.makedirs(web_uploads_dir, exist_ok=True)
@@ -74,13 +69,12 @@ if uploaded_files:
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             new_file_added = True
-            
-    # If new files were added, clear out the cached index and reload the RAG engine
+
     if new_file_added:
         st.cache_resource.clear()
         st.rerun()
 
-# Build the dropdown course navigation checklist
+
 if chunks_dataset:
     available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
     selected_course = st.sidebar.selectbox("Select Course Context:", available_courses)
@@ -101,12 +95,11 @@ if not os.environ.get("GEMINI_API_KEY"):
 else:
     client = genai.Client()
 
-    # Display existing chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # 3. Chat Input Interface
+ 
     if query := st.chat_input("Ask your course question here..."):
         
         with st.chat_message("user"):
@@ -114,7 +107,6 @@ else:
         
         st.session_state.messages.append({"role": "user", "content": query})
 
-        # Build conversational history context string
         history_context = ""
         if len(st.session_state.messages) > 1:
             history_context = "\nRecent Chat History Turn(s):\n"
@@ -124,15 +116,15 @@ else:
         with st.spinner("Executing hybrid semantic and keyword lookup..."):
             tokenized_query = tokenize_text(query)
             
-            # Fetch Top 15 from Dense Index (FAISS)
+
             query_embedding = embedding_model.encode([query], convert_to_numpy=True)
             _, dense_indices = faiss_index.search(query_embedding, k=15)
             
-            # Fetch Top 15 from Sparse Index (BM25)
+
             sparse_scores = bm25_index.get_scores(tokenized_query)
             sparse_indices = np.argsort(sparse_scores)[::-1][:15]
             
-            # Combine unique candidates matching course code
+
             candidate_pool_indices = set(dense_indices[0]).union(set(sparse_indices))
             candidate_chunks = []
             
@@ -146,7 +138,7 @@ else:
                 if meta["course"] == selected_course:
                     candidate_chunks.append(matched_chunk)
 
-            # Apply Cross-Encoder Re-ranking
+
             if candidate_chunks:
                 pairs = [[query, chunk["text"]] for chunk in candidate_chunks]
                 scores = reranker.predict(pairs)
@@ -155,7 +147,6 @@ else:
             else:
                 top_chunks = []
 
-            # Format the context string
             retrieved_context = ""
             citations = []
             for rank_counter, chunk in enumerate(top_chunks, 1):
@@ -163,7 +154,7 @@ else:
                 retrieved_context += f"\n[Document Context {rank_counter}]\nFile: {meta['filename']} | Page: {meta['page']}\nContent: {chunk['text']}\n"
                 citations.append(f"Page {meta['page']} of {meta['filename']}")
 
-            # 4. Synthesize with Gemini
+            #gemini
             if retrieved_context:
                 system_instruction = (
                     "You are an expert academic professor and teaching assistant. Your job is to answer the user's current question "

@@ -5,11 +5,10 @@ def chunk_text_recursively(text, max_chunk_size=1200, overlap=200):
     """
     Splits text dynamically by trying to keep paragraphs and sentences together.
     """
-    # Define our separators in order of importance
+
     separators = ["\n\n", "\n", " ", ""]
     chunks = []
-    
-    # Simple recursive-style splitting logic
+
     current_chunk = ""
     words = text.split(" ")
     
@@ -20,7 +19,7 @@ def chunk_text_recursively(text, max_chunk_size=1200, overlap=200):
             if current_chunk.strip():
                 chunks.append(current_chunk.strip())
             # Retain overlap from the end of the previous chunk
-            overlap_words = current_chunk.split(" ")[-int(overlap/6):] # approx word count for overlap
+            overlap_words = current_chunk.split(" ")[-int(overlap/6): 
             current_chunk = " ".join(overlap_words) + " " + word + " "
             
     if current_chunk.strip():
@@ -37,13 +36,12 @@ def extract_and_chunk_all(base_dir="data"):
     if not os.path.exists(base_dir):
         print(f"Base directory '{base_dir}' does not exist.")
         return chunks_dataset
-
-    # Loop through each course folder
+    
     for course_code in os.listdir(base_dir):
         course_path = os.path.join(base_dir, course_code)
         
         if os.path.isdir(course_path):
-            # Loop through each PDF inside the course folder
+
             for filename in os.listdir(course_path):
                 if filename.lower().endswith('.pdf'):
                     pdf_path = os.path.join(course_path, filename)
@@ -55,7 +53,7 @@ def extract_and_chunk_all(base_dir="data"):
                                 if not text:
                                     continue
                                     
-                                # Apply our structural splitter per page
+  
                                 page_chunks = chunk_text_recursively(text)
                                 
                                 for chunk in page_chunks:

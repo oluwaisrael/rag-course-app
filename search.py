@@ -6,7 +6,7 @@ from google import genai
 from extract import extract_and_chunk_all
 
 def main():
-    # 1. Load data and embed (Same as before)
+
     print("Extracting and chunking PDF documents...")
     chunks_dataset = extract_and_chunk_all()
     if not chunks_dataset:
@@ -23,8 +23,7 @@ def main():
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
     
-    # 2. Initialize the new Gemini Client
-    # It automatically looks for the GEMINI_API_KEY environment variable
+    
     client = genai.Client()
     
     print("\n" + "="*50)
@@ -33,11 +32,10 @@ def main():
     print("="*50)
     
     while True:
-        query = input("\nAsk your course question: ")
+        query = input("\Today's Question Derin or is it derin's friend: ")
         if query.lower() == 'exit':
             break
             
-        # 3. Retrieve the top 3 chunks from FAISS
         query_embedding = model.encode([query], convert_to_numpy=True)
         distances, indices = index.search(query_embedding, k=3)
         
@@ -51,12 +49,12 @@ def main():
             matched_chunk = chunks_dataset[match_idx]
             meta = matched_chunk["metadata"]
             
-            # Format context block for the LLM
+
             retrieved_context += f"\n[Document Context {rank+1}]\n"
             retrieved_context += f"Course: {meta['course']} | File: {meta['filename']} | Page: {meta['page']}\n"
             retrieved_context += f"Content: {matched_chunk['text']}\n"
             
-            # Save for displaying clean citations to the user
+ 
             citations.append(f"Page {meta['page']} of {meta['filename']} ({meta['course']})")
             
         # 4. Construct the RAG System Prompt
