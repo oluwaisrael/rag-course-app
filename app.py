@@ -86,7 +86,7 @@ if st.sidebar.button("DUMP YOUR EX! in the binnnn!"):
     st.session_state.messages = []
     st.rerun()
 
-st.title("🤷🏾‍♂️Derin made an ai assistant for you!(maybe for himself)🤷🏾‍♂️")
+st.title("Derin made an ai assistant for you!(maybe for himself shaa)🤷🏾‍♂️😂")
 st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!😭")
 
 # Quick Check for API Key
