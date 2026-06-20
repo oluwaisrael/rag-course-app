@@ -66,7 +66,7 @@ def extract_and_chunk_all(base_dir="data"):
                                         }
                                     })
                     except Exception as e:
-            print(f"Error reading {filename}: {e}")
+                        print(f"Error reading {filename}: {e}")
 
     MAX_TOTAL_CHUNKS = 1000
     if len(chunks_dataset) > MAX_TOTAL_CHUNKS:
