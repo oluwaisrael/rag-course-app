@@ -19,7 +19,7 @@ def chunk_text_recursively(text, max_chunk_size=1200, overlap=200):
             if current_chunk.strip():
                 chunks.append(current_chunk.strip())
             # Retain overlap from the end of the previous chunk
-            overlap_words = current_chunk.split(" ")[-int(overlap/6): 
+            overlap_words = current_chunk.split(" ")[-int(overlap/6):]
             current_chunk = " ".join(overlap_words) + " " + word + " "
             
     if current_chunk.strip():
