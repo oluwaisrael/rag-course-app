@@ -6,3 +6,4 @@ numpy
 faiss-cpu
 google-genai
 rank-bm25
+pdfplumber
