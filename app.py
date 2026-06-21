@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer, CrossEncoder
 from google import genai
 from rank_bm25 import BM25Okapi
 from extract import extract_and_chunk_all
-
+from wiki_fallback import wikipedia_search
 
 st.set_page_config(page_title="Derin's Academic Assistant", page_icon="📚", layout="wide")
 
@@ -113,7 +113,7 @@ else:
             for msg in st.session_state.messages[-5:-1]:
                 history_context += f"{msg['role'].capitalize()}: {msg['content']}\n"
 
-        with st.spinner("Executing hybrid semantic and keyword lookup..."):
+        with st.spinner("Chill, Derin is checking your course material for you dumbass...😂"):
             tokenized_query = tokenize_text(query)
             
 
@@ -144,18 +144,31 @@ else:
                 scores = reranker.predict(pairs)
                 ranked_indices = np.argsort(scores)[::-1]
                 top_chunks = [candidate_chunks[i] for i in ranked_indices[:5]]
+                top_scores = [scores[i] for i in ranked_indices[:5]]
             else:
                 top_chunks = []
+                top_scores = []
+
+            # A cross-encoder relevance score above this is treated as "actually answers
+            # the question." Below it, retrieval just returned the least-bad match from
+            # an unrelated document, not a real answer -- so we should NOT present it as
+            # grounded course content. ms-marco-MiniLM-L-6-v2 scores are unbounded logits;
+            # in practice genuinely relevant matches tend to score above ~0, while
+            # off-topic "best of a bad pool" matches usually fall below it.
+            RELEVANCE_THRESHOLD = 0.0
+            best_score = top_scores[0] if top_scores else float("-inf")
+            is_relevant = best_score >= RELEVANCE_THRESHOLD
 
             retrieved_context = ""
             citations = []
-            for rank_counter, chunk in enumerate(top_chunks, 1):
-                meta = chunk["metadata"]
-                retrieved_context += f"\n[Document Context {rank_counter}]\nFile: {meta['filename']} | Page: {meta['page']}\nContent: {chunk['text']}\n"
-                citations.append(f"Page {meta['page']} of {meta['filename']}")
+            if is_relevant:
+                for rank_counter, chunk in enumerate(top_chunks, 1):
+                    meta = chunk["metadata"]
+                    retrieved_context += f"\n[Document Context {rank_counter}]\nFile: {meta['filename']} | Page: {meta['page']}\nContent: {chunk['text']}\n"
+                    citations.append(f"Page {meta['page']} of {meta['filename']}")
 
             #gemini
-            if retrieved_context:
+            if is_relevant and retrieved_context:
                 system_instruction = (
                     "You are an expert academic professor and teaching assistant. Your job is to answer the user's current question "
                     "by fully leveraging, summarizing, and explaining the facts found within the provided Document Context. "
@@ -177,7 +190,7 @@ else:
                         
                         if citations:
                             st.markdown("---")
-                            st.markdown("**📚 Sources Verified (Hybrid Search + Re-ranked):**")
+                            st.markdown("** Sources Verified both your own and wikipedia:**")
                             for citation in list(set(citations)):
                                 st.caption(f"• {citation}")
                     
@@ -186,5 +199,57 @@ else:
                 except Exception as e:
                     st.error(f"API Error: {e}")
             else:
-                with st.chat_message("assistant"):
-                    st.warning(f"No specific documentation found matching that query under course code {selected_course}.")
+                with st.spinner("Not in your course material Derin's checking Wikipedia for you sha..."):
+                    wiki_result = wikipedia_search(query)
+
+                if wiki_result:
+                    fallback_system_instruction = (
+                        "You are a helpful academic assistant. The user's question could not be "
+                        "answered from their course material, so you have been given a Wikipedia "
+                        "summary instead. Answer the user's question using ONLY the Wikipedia "
+                        "content provided below. Be clear and concise. "
+                        "Use the provided Chat History Context to track follow-up conversational "
+                        "topics and pronouns smoothly."
+                    )
+
+                    fallback_prompt = (
+                        f"Chat History Context:\n{history_context}\n\n"
+                        f"Wikipedia Article: {wiki_result['title']}\n"
+                        f"Content: {wiki_result['extract']}\n\n"
+                        f"Current Question: {query}"
+                    )
+
+                    try:
+                        response = client.models.generate_content(
+                            model='gemini-2.5-flash',
+                            contents=fallback_prompt,
+                            config={'system_instruction': fallback_system_instruction}
+                        )
+
+                        with st.chat_message("assistant"):
+                            st.warning(
+                                f"i didn't find it in {selected_course} — "
+                                f"Derin helped you to get it from Wikipedia, thank him."
+                            )
+                            st.markdown(response.text)
+                            st.markdown("---")
+                            st.markdown("**🌐 Source (not from your file sha):**")
+                            st.caption(f"• [{wiki_result['title']}]({wiki_result['url']})")
+
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": (
+                                f"* So... it's not in your course material - THIS SHIII is from Wikipedia NIGGA.*\n\n"
+                                f"{response.text}\n\n"
+                                f"Source: [{wiki_result['title']}]({wiki_result['url']})"
+                            )
+                        })
+
+                    except Exception as e:
+                        st.error(f"API Error: {e}")
+                else:
+                    with st.chat_message("assistant"):
+                        st.warning(
+                            f"omo e no dey your pdf abeg "
+                            f"code {selected_course}, and e no dey wikipedia too ask chatgpt abeg "
+                        )

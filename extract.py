@@ -73,5 +73,3 @@ def extract_and_chunk_all(base_dir="data"):
         chunks_dataset = chunks_dataset[:MAX_TOTAL_CHUNKS]
 
     return chunks_dataset
-                        
-    return chunks_datasetX

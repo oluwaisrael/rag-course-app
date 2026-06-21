@@ -1,9 +1,10 @@
-torch==2.3.1
+torch
 sentence-transformers==3.0.1
-transformers==4.41.2
+transformers
 streamlit
 numpy
 faiss-cpu
 google-genai
 rank-bm25
 pdfplumber
+requests
