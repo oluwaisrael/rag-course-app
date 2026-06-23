@@ -76,8 +76,26 @@ if uploaded_files:
 
 
 if chunks_dataset:
-    available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
-    selected_course = st.sidebar.selectbox("from here?:", available_courses)
+    courses = list(set(item["metadata"]["filename"] for item in chunks_dataset))
+
+    selected_course = st.sidebar.markdown("### The files to search")    
+
+    if "selected_files" not in st.session_state:
+        st.session_state.selected_files = set(avalaible_files)
+
+     cols = st.sidebar.columns(1)
+    with cols[0]:
+        for file in available_files:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.caption(file)
+            with col2:
+                if st.checkbox("✓", value=(file in st.session_state.selected_files), key=f"file_{file}"):
+                    st.session_state.selected_files.add(file)
+                else:
+                    st.session_state.selected_files.discard(file)
+    
+    selected_files = st.session_state.selected_files if st.session_state.selected_files else available_files
 else:
     st.sidebar.warning("Heyy you have to upload to get started!")
     selected_course = None
