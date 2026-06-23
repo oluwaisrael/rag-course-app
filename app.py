@@ -9,7 +9,7 @@ from rank_bm25 import BM25Okapi
 from extract import extract_and_chunk_all
 from wiki_fallback import wikipedia_search
 
-st.set_page_config(page_title="Derin's Academic Assistant", page_icon="📚", layout="wide")
+st.set_page_config(page_title="Derin's Academic Assistant", layout="wide")
 
 def tokenize_text(text):
     return re.findall(r'\b\w+\b', text.lower())
@@ -43,24 +43,24 @@ chunks_dataset, embedding_model, faiss_index, bm25_index = initialize_rag_engine
 reranker = load_reranker()
 
 if chunks_dataset and len(chunks_dataset) >= 1000:
-    st.sidebar.warning("Haba nau, it's too much... derin didnt pay for this!")
+    st.sidebar.warning("The file is too large, for this assistant to handle.")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-st.sidebar.title(" These are Your Courses man!")
+st.sidebar.title(" These are Your Courses/Files man!")
 
 uploaded_files = st.sidebar.file_uploader(
-    "Upload PDFs", 
+    "Upload your course materials (PDFs only o):", 
     type=["pdf"], 
     accept_multiple_files=True
 )
 
 
 if uploaded_files:
-    web_uploads_dir = os.path.join("data", "Not Derin's media!")
-    os.makedirs(web_uploads_dir, exist_ok=True)
+    web_uploads_dir = os.path.join( "Not Derin's media!")
+    os.makedirs(web_uploads_dir_ok=True)
     
     new_file_added = False
     for uploaded_file in uploaded_files:
@@ -79,14 +79,14 @@ if chunks_dataset:
     available_courses = sorted(list(set([item["metadata"]["course"] for item in chunks_dataset])))
     selected_course = st.sidebar.selectbox("from here?:", available_courses)
 else:
-    st.sidebar.warning("No courses loaded yet. Drop a PDF above to get started!")
+    st.sidebar.warning("Heyy you have to upload to get started!")
     selected_course = None
 
-if st.sidebar.button("DUMP YOUR EX! in the binnnn!"):
+if st.sidebar.button("DUMP YOUR CHATS!"):
     st.session_state.messages = []
     st.rerun()
 
-st.title("Derin made an ai assistant for you!(maybe for himself shaa)🤷🏾‍♂️😂")
+st.title("Derin made an ai assistant for you!!!")
 st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!😭")
 
 # Quick Check for API Key
@@ -100,7 +100,7 @@ else:
             st.markdown(message["content"])
 
  
-    if query := st.chat_input("Oya what's today's question, dumbasssss"):
+    if query := st.chat_input("Oya what's today's question"):
         
         with st.chat_message("user"):
             st.markdown(query)
@@ -113,7 +113,7 @@ else:
             for msg in st.session_state.messages[-5:-1]:
                 history_context += f"{msg['role'].capitalize()}: {msg['content']}\n"
 
-        with st.spinner("Chill, Derin is checking your course material for you dumbass...😂"):
+        with st.spinner("Chill, Derin is checking your course material for you..."):
             tokenized_query = tokenize_text(query)
             
 
@@ -149,12 +149,7 @@ else:
                 top_chunks = []
                 top_scores = []
 
-            # A cross-encoder relevance score above this is treated as "actually answers
-            # the question." Below it, retrieval just returned the least-bad match from
-            # an unrelated document, not a real answer -- so we should NOT present it as
-            # grounded course content. ms-marco-MiniLM-L-6-v2 scores are unbounded logits;
-            # in practice genuinely relevant matches tend to score above ~0, while
-            # off-topic "best of a bad pool" matches usually fall below it.
+            
             RELEVANCE_THRESHOLD = 0.0
             best_score = top_scores[0] if top_scores else float("-inf")
             is_relevant = best_score >= RELEVANCE_THRESHOLD
@@ -167,7 +162,7 @@ else:
                     retrieved_context += f"\n[Document Context {rank_counter}]\nFile: {meta['filename']} | Page: {meta['page']}\nContent: {chunk['text']}\n"
                     citations.append(f"Page {meta['page']} of {meta['filename']}")
 
-            #gemini
+            #gemini...the part i imputed gemini api key in the terminal and it worked sha...added the env file already too
             if is_relevant and retrieved_context:
                 system_instruction = (
                     "You are an expert academic professor and teaching assistant. Your job is to answer the user's current question "
@@ -187,7 +182,7 @@ else:
                     
                     with st.chat_message("assistant"):
                         st.markdown(response.text)
-                        
+                        #made it able to show the sources from the pdf and wikipedia and removed the duplicate
                         if citations:
                             st.markdown("---")
                             st.markdown("** Sources Verified both your own and wikipedia:**")
@@ -229,7 +224,7 @@ else:
                         with st.chat_message("assistant"):
                             st.warning(
                                 f"i didn't find it in {selected_course} — "
-                                f"Derin helped you to get it from Wikipedia, thank him."
+                                f"Derin helped you to get it from Wikipedia, you should thank him."
                             )
                             st.markdown(response.text)
                             st.markdown("---")
@@ -239,7 +234,7 @@ else:
                         st.session_state.messages.append({
                             "role": "assistant",
                             "content": (
-                                f"* So... it's not in your course material - THIS SHIII is from Wikipedia NIGGA.*\n\n"
+                                f"* So... it's not in your course material but this is from Wikipedia.*\n\n"
                                 f"{response.text}\n\n"
                                 f"Source: [{wiki_result['title']}]({wiki_result['url']})"
                             )
@@ -250,6 +245,6 @@ else:
                 else:
                     with st.chat_message("assistant"):
                         st.warning(
-                            f"omo e no dey your pdf abeg "
-                            f"code {selected_course}, and e no dey wikipedia too ask chatgpt abeg "
+                            f"omo e no dey your pdf "
+                            f"{selected_course}, neither in Wikipedia sha sha sha, Derin no fit find am for you."
                         )
