@@ -76,29 +76,26 @@ if uploaded_files:
 
 
 if chunks_dataset:
-    courses = list(set(item["metadata"]["filename"] for item in chunks_dataset))
-
-    selected_course = st.sidebar.markdown("### The files to search")    
-
+    # Get unique filenames from the dataset
+    available_files = sorted(list(set([item["metadata"]["filename"] for item in chunks_dataset])))
+    
+    st.sidebar.markdown("### Files to Search:")
+    
+    # Initialize session state for selected files
     if "selected_files" not in st.session_state:
-        st.session_state.selected_files = set(avalaible_files)
-
-     cols = st.sidebar.columns(1)
-    with cols[0]:
-        for file in available_files:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.caption(file)
-            with col2:
-                if st.checkbox("✓", value=(file in st.session_state.selected_files), key=f"file_{file}"):
-                    st.session_state.selected_files.add(file)
-                else:
-                    st.session_state.selected_files.discard(file)
+        st.session_state.selected_files = set(available_files)
+    
+    # Display files as toggleable checkboxes
+    for file in available_files:
+        if st.sidebar.checkbox(file, value=(file in st.session_state.selected_files), key=f"file_{file}"):
+            st.session_state.selected_files.add(file)
+        else:
+            st.session_state.selected_files.discard(file)
     
     selected_files = st.session_state.selected_files if st.session_state.selected_files else available_files
 else:
     st.sidebar.warning("Heyy you have to upload to get started!")
-    selected_course = None
+    selected_files = set()
 
 if st.sidebar.button("DUMP YOUR CHATS!"):
     st.session_state.messages = []
@@ -107,7 +104,7 @@ if st.sidebar.button("DUMP YOUR CHATS!"):
 st.title("Derin made an ai assistant for you!!!")
 st.caption("DO NOT ASK OUTSIDE THE FILE YOU UPLOADED ABEG!😭")
 
-# Quick Check for API Key
+# checking for api o
 if not os.environ.get("GEMINI_API_KEY"):
     st.error("Missing Gemini API Key. Please export your key in the terminal before running.")
 else:
