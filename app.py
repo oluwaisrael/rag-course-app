@@ -150,7 +150,7 @@ else:
                 matched_chunk = chunks_dataset[match_idx]
                 meta = matched_chunk["metadata"]
                 
-                if meta["course"] == selected_course:
+                if meta["course"] == selected_course and meta["filename"] in selected_files:
                     candidate_chunks.append(matched_chunk)
 
 
