@@ -238,7 +238,7 @@ else:
 
                         with st.chat_message("assistant"):
                             st.warning(
-                                f"i didn't find it in {selected_course} — "
+                                f"i didn't find it in your course material — "
                                 f"Derin helped you to get it from Wikipedia, you should thank him."
                             )
                             st.markdown(response.text)
@@ -260,6 +260,5 @@ else:
                 else:
                     with st.chat_message("assistant"):
                         st.warning(
-                            f"omo e no dey your pdf "
-                            f"{selected_course}, neither in Wikipedia sha sha sha, Derin no fit find am for you."
+                            f"omo e no dey your pdf neither is it in Wikipedia sha sha sha, Derin no fit find am for you."
                         )
